@@ -1,0 +1,229 @@
+<!doctype html>
+
+<html>
+  
+  <head>
+    <title>Open Exchange</title>
+    <meta name="viewport" content="width=device-width">
+    <link rel="stylesheet" href="https://netdna.bootstrapcdn.com/bootstrap/3.0.0/css/bootstrap.min.css">
+    <script type="text/javascript" src="https://ajax.googleapis.com/ajax/libs/jquery/2.0.3/jquery.min.js"></script>
+    <script type="text/javascript" src="https://netdna.bootstrapcdn.com/bootstrap/3.0.0/js/bootstrap.min.js"></script>
+    <style type="text/css">
+      /* Space out content a bit */
+      body {
+        padding-top: 20px;
+        padding-bottom: 20px;
+      }
+      /* Everything but the jumbotron gets side spacing for mobile first views */
+      .header, .marketing, .footer {
+        padding-left: 15px;
+        padding-right: 15px;
+      }
+      /* Custom page header */
+      .header {
+        border-bottom: 1px solid #e5e5e5;
+      }
+      /* Make the masthead heading the same height as the navigation */
+      .header h3 {
+        margin-top: 0;
+        margin-bottom: 0;
+        line-height: 40px;
+        padding-bottom: 19px;
+      }
+      /* Custom page footer */
+      .footer {
+        padding-top: 19px;
+        color: #777;
+        border-top: 1px solid #e5e5e5;
+      }
+      /* Customize container */
+      @media(min-width: 768px) {
+        .container {
+          max-width: 730px;
+        }
+      }
+      .container-narrow > hr {
+        margin: 30px 0;
+      }
+      /* Main marketing message and sign up button */
+      .jumbotron {
+        text-align: center;
+        border-bottom: 1px solid #e5e5e5;
+      }
+      .jumbotron .btn {
+        font-size: 21px;
+        padding: 14px 24px;
+      }
+      /* Supporting marketing content */
+      .marketing {
+        margin: 40px 0;
+      }
+      .marketing p + h4 {
+        margin-top: 28px;
+      }
+      /* Responsive: Portrait tablets and up */
+      @media screen and(min-width: 768px) {
+        /* Remove the padding we set earlier */
+        .header, .marketing, .footer {
+          padding-left: 0;
+          padding-right: 0;
+        }
+        /* Space out the masthead */
+        .header {
+          margin-bottom: 30px;
+        }
+        /* Remove the bottom border on the jumbotron for visual effect */
+        .jumbotron {
+          border-bottom: 0;
+        }
+      }
+    </style>
+  </head>
+  
+  <body>
+  <!--  mszGiGkfgB1UqPNpTKvUJ1x3SLaG5YX5m  -->
+    <div class="container">
+      <div class="header">
+        <ul class="nav nav-pills pull-right">
+          {% if session['logged_in'] %}
+          <li >
+            <a href="/">Home</a>
+          </li>
+          <li class="active">
+            <a href="/account">Account</a>
+          </li>
+          <li>
+            <a href="/logout">Logout</a>
+          </li>
+        {% else %}
+        <li >
+            <a href="/">Home</a>
+          </li>
+          <li class="active">
+            <a href="/account">Account</a>
+          </li>
+          <li>
+            <a href="/login">Login</a>
+          </li>
+          
+        {% endif %}
+        </ul>
+        <h3 class="text-muted">Open Exchange</h3>
+          {% if deposit %}
+              <div class="alert alert-dismissable alert-info">
+          <button type="button" class="close" data-dismiss="alert">&times;</button>
+          <b>Deposit Address:</b> {{ deposit }}
+        </div>
+        {% endif %}
+        {% if danger %}
+              <div class="alert alert-danger alert-info">
+          <button type="button" class="close" data-dismiss="alert">&times;</button>
+          <b>Error!</b> {{ danger }}
+        </div>
+        {% endif %}
+    {% if success %}
+      <div class="alert alert-success alert-info">
+      <button type="button" class="close" data-dismiss="alert">&times;</button>
+      <b>Success!</b> {{ success }}
+    </div>
+    {% endif %}
+        
+      </div>
+      <ul class="list-group">
+      {% for currency in currencies %}
+        <li class="list-group-item">{{ currencies[currency]['name'] }} - {{getbalance(currency,session['userid'])}} {{ currency.upper() }}
+          <div class="btn-group pull-right">
+            <a class="btn btn-default" data-toggle="dropdown" href="#">Deposit/Withdraw</a><a class="btn dropdown-toggle btn-primary" data-toggle="dropdown" href="#">    <span class="caret"></span>  </a>
+            <ul class="dropdown-menu">
+              <li>
+                <a href="/deposit/{{ currency }}">Deposit</a>
+              </li>
+              <li>
+                <a href="/withdraw/{{ currency }}">Withdraw</a>
+              </li>
+              <li>
+                <a href="/history/{{ currency }}">History</a>
+              </li>
+            </ul>
+          </div>
+
+        {% if history == currency %}  
+          <table class="table">
+            <thead>
+              <tr>
+                <th>Pair</th>
+                <th>Order Type</th>
+                <th>Price</th>
+                <th>Amount</th>
+              </tr>
+            </thead>
+            <tbody>
+            {% for order in orders %}
+            <tr>
+                <td>{{ order[0] }}</td>
+                <td>{{ order[1] }}</td>
+                <td>{{ order[2] }}</td>
+                <td>{{ order[3] }}</td>
+            </tr>
+            {% endfor %}
+            </tbody>
+          </table>
+      {% endif %}
+      {% if withdraw==currency%}
+            <form method="POST" action="/withdraw/{{ currency }}">
+            <span class="help-block">Withdraw Address</span><input type="text" class="form-control" name="address">
+            <br>
+              <span class="help-block">Amount</span><input type="text" class="form-control" name="amount">
+            <br>
+            <button type="submit" class="btn btn-primary">Withdraw {{ currency.upper() }}</button>
+          </form>
+      {% endif %}
+          <div class="row"></div>
+        </li>
+      {% endfor %}
+      </ul>
+
+
+
+      <div class="panel panel-default">
+  <!-- Default panel contents -->
+  <div class="panel-heading">Open Orders</div>
+
+  <!-- Table -->
+<table class="table">
+            <thead>
+              <tr>
+                <th>Pair</th>
+                <th>Order Type</th>
+                <th>Price</th>
+                <th>Amount</th>
+              </tr>
+            </thead>
+            <tbody>
+            {% for order in openorders %}
+            <tr>
+                <td>{{ order[0] }}</td>
+                <td>{{ order[1] }}</td>
+                <td>{{ order[2] }}</td>
+                <td>{{ order[3] }}</td>
+                <td><a href="/cancelorder/{{ order[4] }}">X</a></td>
+            </tr>
+            {% endfor %}
+            </tbody>
+          </table>
+</div>
+      
+
+
+      <div class="row marketing"></div>
+      <div class="footer">
+        <p>&copy; Open Exchange 2014</p>
+        <li>
+          <a href="#">Home</a>
+        </li>
+      </div>
+    </div>
+    <!-- /container -->
+  </body>
+
+</html>

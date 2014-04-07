@@ -1,0 +1,273 @@
+<!doctype html>
+
+<html>
+  
+  <head>
+    <title>Open Exchange</title>
+    <meta name="viewport" content="width=device-width">
+    <link rel="stylesheet" href="https://netdna.bootstrapcdn.com/bootstrap/3.0.0/css/bootstrap.min.css">
+    <script type="text/javascript" src="https://ajax.googleapis.com/ajax/libs/jquery/2.0.3/jquery.min.js"></script>
+    <script type="text/javascript" src="https://netdna.bootstrapcdn.com/bootstrap/3.0.0/js/bootstrap.min.js"></script>
+    <script type="text/javascript" src="https://www.google.com/jsapi"></script>
+    <script type="text/javascript">
+      google.load('visualization', '1', {
+        packages: ['corechart']
+      });
+    </script>
+    <script type="text/javascript">
+      function drawVisualization() {
+        var data = google.visualization.arrayToDataTable([
+          ['Mon', .023, .025, .027, .031],
+          ['Tue', .02, .027, .027, .03],
+          ['Wed', .019, .022, .025, .029],
+          ['Thu', .021, .025, .027, .033],
+          ['Fri', .02, .027, .022, .028] // Treat first row as data as well.        
+          ], true);        var options = {          legend:'none'        };        var chart = new google.visualization.CandlestickChart(document.getElementById('chart_div'));        chart.draw(data, options);      }      google.setOnLoadCallback(drawVisualization);
+    </script>
+    <script type="text/javascript">
+$.getJSON( "http://horse.cloudapp.net:5000/getordersjson/{{ pair }}/ask", function( data ) {
+  var items = [];
+  $.each(data, function (id, order) {
+    items.push('<tr> <td>' + order.price + '</td> <td>' + order.amount + '</td></tr>');
+  }); 
+ 
+  $(items.join( "" )).appendTo( "#asktable" );
+});
+
+$.getJSON( "http://horse.cloudapp.net:5000/getordersjson/{{ pair }}/bid", function( data ) {
+  var items = [];
+  $.each(data, function (id, order) {
+    items.push('<tr> <td>' + order.price + '</td> <td>' + order.amount + '</td></tr>');
+  }); 
+ 
+  $(items.join( "" )).appendTo( "#bidtable" );
+});
+    </script>
+    <style type="text/css">
+      /* Space out content a bit */
+      body {
+        padding-top: 20px;
+        padding-bottom: 20px;
+      }
+      /* Everything but the jumbotron gets side spacing for mobile first views */
+      .header, .marketing, .footer {
+        padding-left: 15px;
+        padding-right: 15px;
+      }
+      /* Custom page header */
+      .header {
+        border-bottom: 1px solid #e5e5e5;
+      }
+      /* Make the masthead heading the same height as the navigation */
+      .header h3 {
+        margin-top: 0;
+        margin-bottom: 0;
+        line-height: 40px;
+        padding-bottom: 19px;
+      }
+      /* Custom page footer */
+      .footer {
+        padding-top: 19px;
+        color: #777;
+        border-top: 1px solid #e5e5e5;
+      }
+      /* Customize container */
+      @media(min-width: 768px) {
+        .container {
+          max-width: 730px;
+        }
+      }
+      .container-narrow > hr {
+        margin: 30px 0;
+      }
+      /* Main marketing message and sign up button */
+      .jumbotron {
+        text-align: center;
+        border-bottom: 1px solid #e5e5e5;
+      }
+      .jumbotron .btn {
+        font-size: 21px;
+        padding: 14px 24px;
+      }
+      /* Supporting marketing content */
+      .marketing {
+        margin: 40px 0;
+      }
+      .marketing p + h4 {
+        margin-top: 28px;
+      }
+      /* Responsive: Portrait tablets and up */
+      @media screen and(min-width: 768px) {
+        /* Remove the padding we set earlier */
+        .header, .marketing, .footer {
+          padding-left: 0;
+          padding-right: 0;
+        }
+        /* Space out the masthead */
+        .header {
+          margin-bottom: 30px;
+        }
+        /* Remove the bottom border on the jumbotron for visual effect */
+        .jumbotron {
+          border-bottom: 0;
+        }
+      }
+    </style>
+  </head>
+  
+  <body>
+    <div class="container">
+      <div class="header">
+        <ul class="nav nav-pills pull-right">
+        {% if session['logged_in'] %}
+          <li class="active">
+            <a href="/">Home</a>
+          </li>
+          <li>
+            <a href="/account">Account</a>
+          </li>
+          <li>
+            <a href="/logout">Logout</a>
+          </li>
+        {% else %}
+        <li class="active">
+            <a href="/">Home</a>
+          </li>
+          <li>
+            <a href="/login">Login</a>
+          </li>
+          <li>
+            <a href="/register">Register</a>
+          </li>
+          
+        {% endif %}
+          
+        </ul>
+        <h3 class="text-muted">Open Exchange</h3>
+      </div>
+      <div class="row">
+        <div class="col-md-12">
+          <div class="navbar navbar-default">
+            <div class="container">
+              <div class="navbar-header">
+                <button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".navbar-collapse">
+                  <span class="sr-only">Toggle navigation</span><span class="icon-bar"></span><span class="icon-bar"></span><span class="icon-bar"></span>
+                </button>
+                <a href="#" class="navbar-brand">Trade</a>
+              </div>
+              <div class="collapse navbar-collapse">
+                <ul class="nav navbar-nav">
+                {% for p in pairs %}
+                  {% if pair==p %}
+                  <li class="active">
+                  {% else %}
+                  <li>
+                  {% endif %}
+                      <a href="/trade/{{ p }}"> {{ p.upper().replace("_","/") }}</a>
+                    </li>
+                {% endfor %}
+                </ul>
+                <ul class="nav navbar-nav navbar-right">
+                <li><a href="#">Vol: {{ volume['quote_volume'] }} {{ pair[0:pair.find("_")].upper() }}</a></li>
+                <li><a href="#">24h High: {{ high }}</a></li>
+                <li><a href="#">24h Low: {{ low }} </a></li>
+                <li><a href="#">Last: </a></li>
+                </ul>
+              </div>
+              <div id="chart_div" style="width: 100%; height: 500px; background-color: #e6e6e6;"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+      {% if dismissable %}
+      <div class="alert alert-dismissable alert-info">
+      <button type="button" class="close" data-dismiss="alert">&times;</button>
+      {{ dismissable }}
+    </div>
+    {% endif %}
+    {% if success %}
+      <div class="alert alert-success alert-info">
+      <button type="button" class="close" data-dismiss="alert">&times;</button>
+      <b>Success!</b> {{ success }}
+    </div>
+    {% endif %}
+    {% if danger %}
+      <div class="alert alert-danger alert-info">
+      <button type="button" class="close" data-dismiss="alert">&times;</button>
+      <b>Error!</b> {{ danger }}
+    </div>
+    {% endif %}
+      <div class="row marketing">
+        <div class="col-lg-6">
+          <h4>Buy {{ pair[0:pair.find("_")].upper() }}</h4>
+          <form method="POST" action="/addorder">
+                      <input type="hidden" name="ordertype" value="buy">
+            <input type="hidden" name="currency_pair" value="ltc_btc">
+            <span class="help-block">Amount</span><input type="text" class="form-control" name="amount">
+            <span class="help-block">Price {{ pair[pair.find("_")+1:].upper() }} / {{ pair[0:pair.find("_")].upper() }} </span><input type="text" class="form-control" name="price">
+            <br>
+            <button title="Please log in before ordering!" type="submit" class="btn btn-primary">Buy {{ pair[0:pair.find("_")].upper() }}</button>
+          </form>
+        </div>
+        <div class="col-lg-6">
+          <h4>Sell {{ pair[0:pair.find("_")].upper() }}</h4>
+          <form method="POST" action="/addorder">
+                      <input type="hidden" name="ordertype" value="sell">
+            <input type="hidden" name="currency_pair" value="ltc_btc">
+            <span class="help-block">Amount</span><input type="text" class="form-control" name="amount">
+            <span class="help-block">Price {{ pair[pair.find("_")+1:].upper() }} / {{ pair[0:pair.find("_")].upper() }} </span><input type="text" class="form-control" name="price">
+            <br>
+            <button title="Please log in before ordering!" type="submit" class="btn btn-primary">Sell {{ pair[0:pair.find("_")].upper() }}</button>
+          </form>
+        </div>
+      </div>
+      <div class="row">
+        <div class="col-md-6">
+          <table class="table bidtable">
+            <thead>
+              <tr>
+                <th>Price</th>
+                <th>Amount</th>
+              </tr>
+            </thead>
+            <tbody id="bidtable">
+            {% for bid in bids %}
+            <tr>
+                <td>{{ bid[0] }}</td>
+                <td>{{ bid[1] }}</td>
+            </tr>
+            {% endfor %}
+              
+            </tbody>
+          </table>
+        </div>
+        <div class="col-md-6">
+          <table class="table">
+            <thead>
+              <tr>
+                <th>Price</th>
+                <th>Amount</th>
+              </tr>
+            </thead>
+            <tbody id="asktable">
+              {% for ask in asks %}
+              <tr>
+                <td>{{ ask[0] }}</td>
+                <td>{{ ask[1] }}</td>
+            </tr>
+            {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </div>
+      <div class="footer">
+        <p>&copy; Open Exchange 2014</p>
+        <li>
+          <a href="#">Home</a>
+        </li>
+      </div>
+    </div>
+    <!-- /container -->
+  </body>
+
+</html>
