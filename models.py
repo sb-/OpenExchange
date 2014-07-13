@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, String, Float, ForeignKey, DateTime, Boolean
+from sqlalchemy import Column, Integer, String, ForeignKey, DateTime, Boolean
 from sqlalchemy.orm import relationship, backref
 from database import Base
 
@@ -8,8 +8,8 @@ class User(Base):
     name = Column(String(50), unique=True)
     email = Column(String(120), unique=True)
     password = Column(String(120))
-    btc_balance = Column(Float)
-    ltc_balance = Column(Float)
+    btc_balance = Column(Integer)
+    ltc_balance = Column(Integer)
     #orders = relationship("Order",backref="users")
     def __init__(self, name, email, password):
         self.name = name

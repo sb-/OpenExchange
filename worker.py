@@ -162,6 +162,10 @@ def fill_order():
     db_session.commit()
 
 
-with daemon.DaemonContext():
-    while True:
-        fill_order()
+#with daemon.DaemonContext():
+#    while True:
+#        fill_order()
+
+#For testing
+while True:
+    fill_order()

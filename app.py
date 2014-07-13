@@ -15,6 +15,7 @@ import inspect
 import json
 import time
 from config import config
+from decimal import ExtendedContext, Decimal, getcontext
 
 """
 =================
@@ -77,13 +78,13 @@ def withdraw(currency):
         if 'amount' not in request.form or 'address' not in request.form:
             return account_page(danger="Please enter an address and an amount!") #TODO: change this error
         try:
-            total = float(request.form['amount'])
+            total = string_to_currency_unit(request.form['amount'], config.get_multiplier(currency))
         except:
             return account_page(danger="Invalid amount!")
-        if check_balance(currency,session['userid']) < int(total * config.get_multiplier(currency)) or total < 0:
+        if check_balance(currency,session['userid']) < total or total < 0:
             return account_page(danger="Balance too low to execute withdrawal!")
         #TODO: add valid address checking
-        adjustbalance(currency,session['userid'],-1 * int(total * config.get_multiplier(currency)))
+        adjustbalance(currency,session['userid'],-1 * total)
         co = CompletedOrder(currency + "_" + currency, "WITHDRAWAL", total, 0, session['userid'], is_withdrawal=True, withdrawal_address=request.form['address'])
         db_session.add(co)
         db_session.commit()
@@ -180,6 +181,7 @@ def logout():
 
 @app.route('/addorder',methods=['POST'])
 def addorder():
+
     """ Checks balance and essential stuff, generates an order ID then adds order to a redis queue. """
     instrument = request.form['currency_pair']
     if not is_logged_in(session):
@@ -192,16 +194,20 @@ def addorder():
     base_currency = request.form['currency_pair'].split("_")[0]
     quote_currency = request.form['currency_pair'].split("_")[1]
     try:
-        rprice = float(request.form['price'])
-        ramount = int(float(request.form['amount'])* config.get_multiplier(base_currency))
-    except:
+        rprice = Decimal(request.form['price'])
+        ramount = string_to_currency_unit(request.form['amount'], config.get_multiplier(base_currency))
+        print(ramount)
+    except Exception as e:
+        print(e)
         return home_page(instrument, danger="Please enter numerical values for price and amount!") 
     if ramount < 1: #TODO: find a good amount for this
         return home_page(instrument, danger="Transaction amount too low!") 
     if rprice <= 0:
         return home_page(instrument, danger="Price must be greater than 0!") 
 
-    total = int(rprice * ramount)
+    getcontext().prec = 6
+    whole, dec = ExtendedContext.divmod(Decimal(rprice), Decimal(1))
+    total = whole * config.get_multiplier(base_currency) + dec * config.get_multiplier(base_currency)
     uid = session['userid']
 
     orderid = generate_password_hash(str(random.random()))
@@ -256,7 +262,7 @@ def balance_processor():
         For example, in the template one can do {{ getbalance("btc", 48549) }}. The division is done because this is what the front-end user sees,
         and they do not want prices in satoshis or cents"""
     def getbalance(c, uid):
-        return check_balance(c, uid)/config.get_multiplier(c)
+        return "{:.4f}".format(check_balance(c, uid)/float(config.get_multiplier(c)))
     return dict(getbalance=getbalance)
 
 @app.route('/volume/<instrument>')
@@ -352,7 +358,7 @@ def openorders(uid):
         base_currency = c['instrument'][0:c['instrument'].find("_")]
         quote_currency = c['instrument'][c['instrument'].find("_")+1:]
         instrument = (base_currency+"/"+quote_currency).upper()
-        r.append([instrument, c['ordertype'], c['price'] + " " + instrument, str(int(c['amount'])/config.get_multiplier(base_currency)) + " " + base_currency.upper(), o])
+        r.append([instrument, c['ordertype'], c['price'] + " " + instrument, str(float(c['amount'])/config.get_multiplier(base_currency)) + " " + base_currency.upper(), o])
     return r
 
 def getvolume(instrument):
@@ -389,6 +395,20 @@ def home_page(p, **kwargs):
 
 def account_page(**kwargs):
     return render_template('account.html', currencies=config.get_currencies(),openorders=openorders(session['userid']),**kwargs)
+
+def string_to_currency_unit(s, prec):
+    print(s, prec)
+    if s.count('.') > 1:
+        return
+    if s.count('.') == 0:
+        return int(s) * prec
+    base, dec = s.split(".")
+    total = prec * int(base)
+    while prec > 1 and dec:
+        prec /= 10
+        total += int(dec[0]) * prec
+        dec = dec[1:]
+    return total
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0')
