@@ -16,18 +16,31 @@ import json
 import time
 from config import config
 from decimal import ExtendedContext, Decimal, getcontext
+from flask.ext.mail import Mail, Message
+
 
 """
 =================
 Flask configuration
 =================
 """
-DEBUG = True
-SECRET_KEY = 'CHANGE_THIS'
-
 
 app = Flask(__name__)
-app.config.from_object(__name__)
+app.config.update(
+    DEBUG=True,
+    SECRET_KEY = 'CHANGE_THIS',
+    #EMAIL SETTINGS
+    MAIL_SERVER='smtp.gmail.com',
+    MAIL_PORT=465,
+    MAIL_USE_SSL=True,
+    MAIL_USERNAME = 'admin@gmail.com',
+    MAIL_PASSWORD = 'password'
+    )
+
+#app.config.from_object(__name__)
+
+mail=Mail(app)
+
 
 """
 =================
@@ -48,6 +61,8 @@ def shutdown_session(exception=None):
 Request Routing
 =================
 """
+
+""" Basic/Account stuff """
 @app.route('/')
 def home():    
     return home_page("ltc_btc")
@@ -58,88 +73,17 @@ def account():
         return home_page("ltc_btc",danger="Please log in to perform that action.")
     return account_page()
 
-@app.route('/history/<currency>')
-def history(currency): 
-    if not is_logged_in(session):
-        return home_page("ltc_btc",danger="Please log in to perform that action.")
-    if not config.is_valid_currency(currency):
-        return account_page(danger="Invalid Currency!")
-    return account_page(history=currency, orders=tradehistory(currency, session['userid']))
-
-@app.route('/withdraw/<currency>', methods=['GET', 'POST'])
-def withdraw(currency): 
-    if not is_logged_in(session):
-        return home_page("ltc_btc",danger="Please log in to perform that action.")
-    if not config.is_valid_currency(currency):
-        return account_page(danger="Invalid Currency!")
-    if request.method == 'GET':
-        return account_page(withdraw=currency)
-    elif request.method == 'POST':
-        if 'amount' not in request.form or 'address' not in request.form:
-            return account_page(danger="Please enter an address and an amount!") #TODO: change this error
-        try:
-            total = string_to_currency_unit(request.form['amount'], config.get_multiplier(currency))
-        except:
-            return account_page(danger="Invalid amount!")
-        if check_balance(currency,session['userid']) < total or total < 0:
-            return account_page(danger="Balance too low to execute withdrawal!")
-        #TODO: add valid address checking
-        adjustbalance(currency,session['userid'],-1 * total)
-        co = CompletedOrder(currency + "_" + currency, "WITHDRAWAL", total, 0, session['userid'], is_withdrawal=True, withdrawal_address=request.form['address'])
-        db_session.add(co)
-        db_session.commit()
-        return account_page(success="Deposit to " + request.form['address'] + " completed!")
-
-
-    
-
-@app.route('/deposit/<currency>')
-def deposit(currency):
-    """ Returns deposit address for given currency from SQL. """
-    if not is_logged_in(session):
-        return home_page("ltc_btc",danger="Please log in to perform that action.")
-    if not config.is_valid_currency(currency):
-        return account_page(danger="Invalid Currency!")
-    addr =  Address.query.filter(Address.currency==currency).filter(Address.user==session['userid']).first().address
-    return account_page(deposit=addr)
-
-@app.route('/trade/<instrument>')
-def trade_page(instrument):    
-    if not config.is_valid_instrument(instrument):
-        return home_page("ltc_btc", danger="Invalid trade pair!")
-    return home_page(instrument)
-
-@app.route('/getordersjson/<instrument>/<t>')
-def getjsonorders(instrument,t):
-    """ Returns open orders from redis orderbook. """
-    orders = []
-    if config.is_valid_instrument(instrument):
-        if t == "bid":
-            bids = redis.zrange(instrument+"/bid",0,-1,withscores=True)
-            for bid in bids:
-                orders.append({"price":bid[1], "amount":redis.hget(bid[0],"amount")})
-        else:
-            asks = redis.zrange(instrument+"/ask",0,-1,withscores=True)
-            for ask in asks:
-                orders.append({"price":ask[1], "amount":redis.hget(ask[0],"amount")})
-        #So prices are not quoted in satoshis
-        #TODO: move this client side?
-        for order in orders:
-            order['amount'] = float(order['amount'])/config.get_multiplier(instrument.split("_")[0])
-    else:
-        orders.append("Invalid trade pair!")
-    jo = json.dumps(orders)
-    return Response(jo,  mimetype='application/json')
-
 @app.route('/login', methods=['GET', 'POST'])
 def login():
     error = None
     if request.method == 'POST':
         user = User.query.filter(User.email==request.form['email']).first()
         if not user:
-            return render_template('login2.html', error=True)
-        if not check_password_hash(user.password, request.form['password']):
-            return render_template('login2.html', error=True)
+            return render_template('login2.html', error="Please check your email and username.")
+        elif not check_password_hash(user.password, request.form['password']):
+            return render_template('login2.html', error="Please check your email and username.")
+        elif not user.activated:
+            return render_template('login2.html', error="Please confirm your email before logging in.")
         else:
             session['logged_in'] = True
             session['userid'] = User.query.filter(User.email == request.form['email']).first().id
@@ -153,25 +97,40 @@ def register():
         if "" in request.form.values():
             return render_template("register.html")
         if request.form['username'] in list(User.query.values(User.name)):
-            return render_template("register.html",error="password")
+            return render_template("register.html",error="Please enter a password.")
         if request.form['email'] in list(User.query.values(User.email)):
-            return render_template("register.html",error="email")
+            return render_template("register.html",error="Please enter a valid email.")
         if request.form['password'] != request.form['passwordconfirm']:
-            return render_template("register.html",error="matching")
+            return render_template("register.html",error="Passwords do not match.")
         #TODO: error for when they try to register when logged in already
         u = User(request.form['username'], request.form['email'],generate_password_hash(request.form['password'].strip()))
         db_session.add(u)
         db_session.commit()
 
-        for currency in config.get_currencies():
-            addr = generate_deposit_address(currency)
-            a = Address(currency,addr,u.id)
-            db_session.add(a)
+        #for currency in config.get_currencies():
+        #    addr = generate_deposit_address(currency)
+        #    a = Address(currency,addr,u.id)
+        #    db_session.add(a)
         db_session.commit()
-        return home_page("ltc_btc", dismissable='Successfully registered. Please log in.')
+        if not send_confirm_email(u.id):
+            return home_page("ltc_btc", danger='An error occured during registration. Please contact the administrator.')
+        return home_page("ltc_btc", dismissable='Successfully registered. Please check your email and confirm your account before logging in.')
 
     if request.method == 'GET':
         return render_template("register.html")
+
+@app.route("/activate/<code>")       
+def activate_account(code):
+    uid = redis.hget('activation_keys', code)
+    if not uid:
+        return  home_page("ltc_btc", danger='Invalid registration code!')
+    user = User.query.filter(User.id==uid).first()
+    if not user or user.activated:
+        return  home_page("ltc_btc", danger='Account already registered or invalid code!')
+    user.activated = True
+    redis.hdel('activation_keys', code)
+    db_session.commit()
+    return home_page("ltc_btc", dismissable='Account successfully registered!')
 
 @app.route('/logout')
 def logout():
@@ -179,6 +138,7 @@ def logout():
     session.pop('userid', None)
     return home_page("ltc_btc", dismissable="Successfully logged out!")
 
+""" Operations that actually involve currency. """
 @app.route('/addorder',methods=['POST'])
 def addorder():
 
@@ -206,8 +166,9 @@ def addorder():
         return home_page(instrument, danger="Price must be greater than 0!") 
 
     getcontext().prec = 6
-    whole, dec = ExtendedContext.divmod(Decimal(rprice), Decimal(1))
-    total = whole * config.get_multiplier(base_currency) + dec * config.get_multiplier(base_currency)
+    whole, dec = ExtendedContext.divmod(rprice*ramount/config.get_multiplier(base_currency), Decimal(1))
+    total = int(whole * config.get_multiplier(base_currency) + dec * config.get_multiplier(base_currency)) 
+    print("total: " + str(total))
     uid = session['userid']
 
     orderid = generate_password_hash(str(random.random()))
@@ -247,23 +208,82 @@ def cancelorder(old_order_id):
     return home_page("ltc_btc", dismissable="Cancelled order!")
     # Note: their order may have already been filled by an order that is ahead of the cancellation in the queue, so do not credit their account here
 
-
-def check_balance(currency, userid):
-    """ Used by the balance_processor ontext processor below. """
+@app.route('/withdraw/<currency>', methods=['GET', 'POST'])
+def withdraw(currency): 
     if not is_logged_in(session):
-        return home_page("ltc_btc",danger="Please log in before performing that action!")
-    current_user = User.query.filter(User.id==userid).first()
-    baldict = {"btc":current_user.btc_balance, "ltc":current_user.ltc_balance}
-    return baldict[currency]
+        return home_page("ltc_btc",danger="Please log in to perform that action.")
+    if not config.is_valid_currency(currency):
+        return account_page(danger="Invalid Currency!")
+    if request.method == 'GET':
+        return account_page(withdraw=currency)
+    elif request.method == 'POST':
+        if 'amount' not in request.form or 'address' not in request.form:
+            return account_page(danger="Please enter an address and an amount!") #TODO: change this error
+        try:
+            total = string_to_currency_unit(request.form['amount'], config.get_multiplier(currency))
+        except:
+            return account_page(danger="Invalid amount!")
+        if check_balance(currency,session['userid']) < total or total < 0:
+            return account_page(danger="Balance too low to execute withdrawal!")
+        #TODO: add valid address checking
+        adjustbalance(currency,session['userid'],-1 * total)
+        co = CompletedOrder(currency + "_" + currency, "WITHDRAWAL", total, 0, session['userid'], is_withdrawal=True, withdrawal_address=request.form['address'])
+        db_session.add(co)
+        db_session.commit()
+        return account_page(success="Deposit to " + request.form['address'] + " completed!")
 
-@app.context_processor
-def balance_processor():
-    """ Used to get balance of currencies from the template for the account page. Flask required this for a callable function from the template. 
-        For example, in the template one can do {{ getbalance("btc", 48549) }}. The division is done because this is what the front-end user sees,
-        and they do not want prices in satoshis or cents"""
-    def getbalance(c, uid):
-        return "{:.4f}".format(check_balance(c, uid)/float(config.get_multiplier(c)))
-    return dict(getbalance=getbalance)
+@app.route('/deposit/<currency>')
+def deposit(currency):
+    """ Returns deposit address for given currency from SQL. """
+    if not is_logged_in(session):
+        return home_page("ltc_btc",danger="Please log in to perform that action.")
+    if not config.is_valid_currency(currency):
+        return account_page(danger="Invalid Currency!")
+    addr =  Address.query.filter(Address.currency==currency).filter(Address.user==session['userid']).first().address
+    return account_page(deposit=addr)
+
+@app.route('/history/<currency>')
+def history(currency): 
+    if not is_logged_in(session):
+        return home_page("ltc_btc",danger="Please log in to perform that action.")
+    if not config.is_valid_currency(currency):
+        return account_page(danger="Invalid Currency!")
+    return account_page(history=currency, orders=tradehistory(currency, session['userid']))
+
+
+@app.route('/trade/<instrument>')
+def trade_page(instrument):    
+    if not config.is_valid_instrument(instrument):
+        return home_page("ltc_btc", danger="Invalid trade pair!")
+    return home_page(instrument)
+
+@app.route('/getordersjson/<instrument>/<t>')
+def getjsonorders(instrument,t):
+    """ Returns open orders from redis orderbook. """
+    orders = []
+    if config.is_valid_instrument(instrument):
+        if t == "bid":
+            bids = redis.zrange(instrument+"/bid",0,-1,withscores=True)
+            for bid in bids:
+                orders.append({"price":bid[1], "amount":redis.hget(bid[0],"amount")})
+        else:
+            asks = redis.zrange(instrument+"/ask",0,-1,withscores=True)
+            for ask in asks:
+                orders.append({"price":ask[1], "amount":redis.hget(ask[0],"amount")})
+        #So prices are not quoted in satoshis
+        #TODO: move this client side?
+        for order in orders:
+            order['amount'] = float(order['amount'])/config.get_multiplier(instrument.split("_")[0])
+    else:
+        orders.append("Invalid trade pair!")
+    jo = json.dumps(orders)
+    return Response(jo,  mimetype='application/json')
+
+"""
+=================
+API/JSON functions
+=================
+"""
 
 @app.route('/volume/<instrument>')
 def getvolumejson(instrument):
@@ -284,11 +304,29 @@ def getlowjson(instrument):
     jo = json.dumps({'low':getlow(instrument)})
     return Response(jo,  mimetype='application/json')
 
+
 """
 =================
 Utility Functions
 =================
 """
+def check_balance(currency, userid):
+    """ Used by the balance_processor ontext processor below. """
+    if not is_logged_in(session):
+        return home_page("ltc_btc",danger="Please log in before performing that action!")
+    current_user = User.query.filter(User.id==userid).first()
+    baldict = {"btc":current_user.btc_balance, "ltc":current_user.ltc_balance}
+    return baldict[currency]
+
+@app.context_processor
+def balance_processor():
+    """ Used to get balance of currencies from the template for the account page. Flask required this for a callable function from the template. 
+        For example, in the template one can do {{ getbalance("btc", 48549) }}. The division is done because this is what the front-end user sees,
+        and they do not want prices in satoshis or cents"""
+    def getbalance(c, uid):
+        return "{:.4f}".format(check_balance(c, uid)/float(config.get_multiplier(c)))
+    return dict(getbalance=getbalance)
+
 def adjustbalance(currency,userid,amount,price=None):
     current_user = User.query.filter(User.id==userid).first()
     #TODO: This function really needs to be cleaned up...
@@ -334,6 +372,39 @@ def generate_deposit_address(currency):
         addr = rpc.getnewaddress()
     return addr
 
+def home_page(p, **kwargs):
+    return render_template('index2.html', pair=p, volume=getvolume(p), low=getlow(p), high=gethigh(p), pairs=config.get_instruments(),**kwargs)
+
+def account_page(**kwargs):
+    return render_template('account.html', currencies=config.get_currencies(),openorders=openorders(session['userid']),**kwargs)
+
+def string_to_currency_unit(s, prec):
+    print(s, prec)
+    if s.count('.') > 1:
+        return
+    if s.count('.') == 0:
+        return int(s) * prec
+    base, dec = s.split(".")
+    total = prec * int(base)
+    while prec > 1 and dec:
+        prec /= 10
+        total += int(dec[0]) * prec
+        dec = dec[1:]
+    return total
+
+def send_confirm_email(uid):
+    user = User.query.filter(User.id==uid).first()
+    if user:
+        if not user.activated:
+            code = generate_password_hash(str(random.random()))
+            redis.hset("activation_keys", code, str(uid))
+            msg = Message('Activation Code', sender="admin@gmail.org", recipients=[user.email])
+            msg.body = "Thank you for signing up at OpenExchange. Activate your account at http://localhost:5000/activate/{}".format(code)
+            mail.send(msg)
+            return True
+    return False
+
+""" Used by APIs/grab order information. """
 def tradehistory(currency, uid):
     if not is_logged_in(session):
         return home_page("ltc_btc",danger="Please log in to perform that action.")
@@ -390,25 +461,6 @@ def getlow(instrument):
     if len(orders)  < 1: return 0
     return orders[0][1]
 
-def home_page(p, **kwargs):
-    return render_template('index2.html', pair=p, volume=getvolume(p), low=getlow(p), high=gethigh(p), pairs=config.get_instruments(),**kwargs)
-
-def account_page(**kwargs):
-    return render_template('account.html', currencies=config.get_currencies(),openorders=openorders(session['userid']),**kwargs)
-
-def string_to_currency_unit(s, prec):
-    print(s, prec)
-    if s.count('.') > 1:
-        return
-    if s.count('.') == 0:
-        return int(s) * prec
-    base, dec = s.split(".")
-    total = prec * int(base)
-    while prec > 1 and dec:
-        prec /= 10
-        total += int(dec[0]) * prec
-        dec = dec[1:]
-    return total
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0')

@@ -10,6 +10,7 @@ class User(Base):
     password = Column(String(120))
     btc_balance = Column(Integer)
     ltc_balance = Column(Integer)
+    activated = Column(Boolean)
     #orders = relationship("Order",backref="users")
     def __init__(self, name, email, password):
         self.name = name
@@ -17,6 +18,7 @@ class User(Base):
         self.password = password
         self.btc_balance = 0
         self.ltc_balance = 0
+        self.activated = False
     def __repr__(self):
         return '<User %r>' % (self.name)
 

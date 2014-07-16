@@ -13,6 +13,7 @@ def fill_order():
     """ Typical limit order book implementation, handles orders in Redis and writes exchange history to SQL. """
     orderid = redis.blpop("order_queue")[1]
     order = redis.hgetall(orderid)
+    print("FILLING ORDER: " + str(order))
     ordertype = order["ordertype"]
 
     # do this here, the canceled order hashes dont have all the info that normal ones do
@@ -56,7 +57,7 @@ def fill_order():
         norders = redis.zcard(asktable)
         if norders > 0:
             lowestprice = redis.zscore(asktable,lowesthash[0])
-        amount_to_buy = 0.0
+        amount_to_buy = 0
         if lowestprice > price or norders < 1:
             # if there are none, add straight to the orderbook
             redis.zadd(bidtable,orderid, price)

@@ -54,24 +54,10 @@
 
       <form class="form" name="loginform" method="POST" action="register">
         <h2 class="form-signin-heading">Register</h2>
-        {% if error=="email" %}
+        {% if error %}
           <div class="alert alert-danger alert-info">
           <button type="button" class="close" data-dismiss="alert">&times;</button>
-          <b>Error!</b> Please enter a valid email.
-        </div>
-        {% endif %}
-
-        {% if error=="matching" %}
-          <div class="alert alert-danger alert-info">
-          <button type="button" class="close" data-dismiss="alert">&times;</button>
-          <b>Error!</b> Please enter a password.
-        </div>
-        {% endif %}
-
-        {% if error=="password" %}
-          <div class="alert alert-danger alert-info">
-          <button type="button" class="close" data-dismiss="alert">&times;</button>
-          <b>Error!</b> Passwords do not match.
+          <b>Error!</b>  {{ error }}
         </div>
         {% endif %}
         <input type="text" class="form-control" placeholder="Name" name="username">

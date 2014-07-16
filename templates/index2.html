@@ -25,7 +25,7 @@
           ], true);        var options = {          legend:'none'        };        var chart = new google.visualization.CandlestickChart(document.getElementById('chart_div'));        chart.draw(data, options);      }      google.setOnLoadCallback(drawVisualization);
     </script>
     <script type="text/javascript">
-$.getJSON( "http://horse.cloudapp.net:5000/getordersjson/{{ pair }}/ask", function( data ) {
+$.getJSON( "http://localhost:5000/getordersjson/{{ pair }}/ask", function( data ) {
   var items = [];
   $.each(data, function (id, order) {
     items.push('<tr> <td>' + order.price + '</td> <td>' + order.amount + '</td></tr>');
@@ -34,7 +34,7 @@ $.getJSON( "http://horse.cloudapp.net:5000/getordersjson/{{ pair }}/ask", functi
   $(items.join( "" )).appendTo( "#asktable" );
 });
 
-$.getJSON( "http://horse.cloudapp.net:5000/getordersjson/{{ pair }}/bid", function( data ) {
+$.getJSON( "http://localhost:5000/getordersjson/{{ pair }}/bid", function( data ) {
   var items = [];
   $.each(data, function (id, order) {
     items.push('<tr> <td>' + order.price + '</td> <td>' + order.amount + '</td></tr>');
