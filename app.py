@@ -107,10 +107,10 @@ def register():
         db_session.add(u)
         db_session.commit()
 
-        #for currency in config.get_currencies():
-        #    addr = generate_deposit_address(currency)
-        #    a = Address(currency,addr,u.id)
-        #    db_session.add(a)
+        for currency in config.get_currencies():
+            addr = generate_deposit_address(currency)
+            a = Address(currency,addr,u.id)
+            db_session.add(a)
         db_session.commit()
         if not send_confirm_email(u.id):
             return home_page("ltc_btc", danger='An error occured during registration. Please contact the administrator.')

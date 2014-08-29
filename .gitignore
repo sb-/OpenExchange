@@ -1,3 +1,4 @@
+.DS_Store
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
@@ -11,7 +12,7 @@ env/
 build/
 develop-eggs/
 dist/
-eggs/
+ggs/
 lib/
 lib64/
 parts/
@@ -58,3 +59,4 @@ bitcoinrpc/*
 jsonrpc/*
 *.db
 *.txt
+
