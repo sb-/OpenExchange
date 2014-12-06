@@ -4,22 +4,28 @@ Home/Basic Stuff
 =================
 """
 
-from flask import Blueprint, Response, session, request, render_template
+from flask import Blueprint, session, request, render_template
+
 from app.util import home_page
-from app import app
+from app.util import generate_password_hash, check_password_hash, generate_deposit_address, is_logged_in, account_page, openorders
+from app.database import db_session, redis
+from app.models import *
+from app.config import config
+import time
+
 home = Blueprint('home', __name__, url_prefix='/')
 
 
 """ Basic/Account stuff """
 @home.route('/')
 def homepage():
-	#for rule in app.url_map.iter_rules():
-	#	if "GET" in rule.methods:
-	#		print(rule.endpoint + " " + url_for(rule.endpoint))
-	return home_page("ltc_btc")
+    #for rule in app.url_map.iter_rules():
+    #	if "GET" in rule.methods:
+    #		print(rule.endpoint + " " + url_for(rule.endpoint))
+    return home_page("ltc_btc")
 
 @home.route('account')
-def account(): 
+def account():
     if not is_logged_in(session):
         return home_page("ltc_btc",danger="Please log in to perform that action.")
     return account_page()
@@ -70,7 +76,7 @@ def register():
     if request.method == 'GET':
         return render_template("register.html")
 
-@home.route("activate/<code>")       
+@home.route("activate/<code>")
 def activate_account(code):
     uid = redis.hget('activation_keys', code)
     if not uid:
@@ -102,7 +108,7 @@ def send_confirm_email(uid):
     return False
 
 @home.route('trade/<instrument>')
-def trade_page(instrument):    
+def trade_page(instrument):
     if not config.is_valid_instrument(instrument):
         return home_page("ltc_btc", danger="Invalid trade pair!")
     return home_page(instrument)

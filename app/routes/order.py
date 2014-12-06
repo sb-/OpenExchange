@@ -5,7 +5,7 @@ Order functions
 """
 
 
-from flask import Blueprint, Response, render_template
+from flask import Blueprint
 
 order = Blueprint('order', __name__, url_prefix='/order')
 

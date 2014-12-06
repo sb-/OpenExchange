@@ -14,10 +14,13 @@ app.config.update(
     MAIL_PASSWORD = 'password'
     )
 
+from config import config
 from app.routes.api import api
 from app.routes.home import home
 from app.routes.account import account
 from app.routes.order import order
+from app.util import check_balance
+
 
 app.register_blueprint(api)
 app.register_blueprint(home)

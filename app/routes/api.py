@@ -4,9 +4,10 @@ API/JSON functions
 =================
 """
 
-
-from flask import Blueprint, Response, render_template
 import json
+
+from flask import Blueprint, Response
+
 
 api = Blueprint('api', __name__, url_prefix='/api')
 
