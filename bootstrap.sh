@@ -19,5 +19,7 @@ echo "rpcpassword=94CpFcoCgO" >> /home/vagrant/.bitcoin/bitcoin.conf
 echo "rpcport=8332" >> /home/vagrant/.bitcoin/bitcoin.conf
 echo "server=1" >> /home/vagrant/.bitcoin/bitcoin.conf
 sudo /home/vagrant/bitcoin-0.9.2.1-linux/bin/32/bitcoind -daemon -testnet
+echo
 sudo /home/vagrant/litecoin-0.8.7.2-linux/bin/32/litecoind -daemon -testnet
+echo
 sudo redis-server /etc/redis/redis.conf
