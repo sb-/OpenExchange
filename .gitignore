@@ -56,7 +56,7 @@ docs/_build/
 target/
 
 #misc bitcoin stuff
-bitcoinrpc/*
+#bitcoinrpc/*
 jsonrpc/*
 *.db
 *.txt
