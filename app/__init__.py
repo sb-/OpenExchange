@@ -20,6 +20,7 @@ from app.routes.home import home
 from app.routes.account import account
 from app.routes.order import order
 from app.util import check_balance
+from flask_bootstrap import Bootstrap
 
 
 app.register_blueprint(api)
@@ -28,7 +29,7 @@ app.register_blueprint(order)
 app.register_blueprint(account)
 
 mail = Mail(app)
-
+Bootstrap(app)
 
 @app.before_request
 def before_request():
