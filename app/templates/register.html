@@ -1,11 +1,6 @@
-<!doctype html>
-<html>
-  <head>
-    <title>Register</title>
-    <meta name="viewport" content="width=device-width">
-    <link rel="stylesheet" href="https://netdna.bootstrapcdn.com/bootstrap/3.0.0/css/bootstrap.min.css"/>
-    <script src="https://ajax.googleapis.com/ajax/libs/jquery/2.0.3/jquery.min.js" type="text/javascript"></script>
-    <script src="https://netdna.bootstrapcdn.com/bootstrap/3.0.0/js/bootstrap.min.js" type="text/javascript"></script>
+{% extends "bootstrap/base.html" %}
+{% block styles %}
+{{super()}}
     <style type="text/css">
       body {
         padding-top: 40px;
@@ -48,8 +43,9 @@
         border-top-right-radius: 0;
       }
     </style>
-  </head>
-  <body>
+{% endblock %}
+
+  {% block content %}
     <div class="container">
 
       <form class="form" name="loginform" method="POST" action="register">
@@ -68,6 +64,4 @@
       </form>
 
     </div> <!-- /container -->
-
-  </body>
-</html>
+{% endblock %}

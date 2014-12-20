@@ -1,13 +1,6 @@
-<!doctype html>
-
-<html>
-  
-  <head>
-    <title>Open Exchange</title>
-    <meta name="viewport" content="width=device-width">
-    <link rel="stylesheet" href="https://netdna.bootstrapcdn.com/bootstrap/3.0.0/css/bootstrap.min.css">
-    <script type="text/javascript" src="https://ajax.googleapis.com/ajax/libs/jquery/2.0.3/jquery.min.js"></script>
-    <script type="text/javascript" src="https://netdna.bootstrapcdn.com/bootstrap/3.0.0/js/bootstrap.min.js"></script>
+{% extends "bootstrap/base.html" %}
+{% block styles %}
+{{super()}}
     <style type="text/css">
       /* Space out content a bit */
       body {
@@ -78,9 +71,9 @@
         }
       }
     </style>
-  </head>
-  
-  <body>
+{% endblock %}
+  {% block content %}
+
   <!--  mszGiGkfgB1UqPNpTKvUJ1x3SLaG5YX5m  -->
     <div class="container">
       <div class="header">
@@ -224,6 +217,4 @@
       </div>
     </div>
     <!-- /container -->
-  </body>
-
-</html>
+{% endblock %}

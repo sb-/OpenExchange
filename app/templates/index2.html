@@ -1,56 +1,9 @@
-<!doctype html>
+{% extends "bootstrap/base.html" %}
 
-<html>
-
-<head>
-    <title>Open Exchange</title>
-    <meta name="viewport" content="width=device-width">
-    <link rel="stylesheet" href="https://netdna.bootstrapcdn.com/bootstrap/3.0.0/css/bootstrap.min.css">
-    <script type="text/javascript" src="https://ajax.googleapis.com/ajax/libs/jquery/2.0.3/jquery.min.js"></script>
-    <script type="text/javascript" src="https://netdna.bootstrapcdn.com/bootstrap/3.0.0/js/bootstrap.min.js"></script>
-    <script type="text/javascript" src="https://www.google.com/jsapi"></script>
-    <script type="text/javascript">
-        google.load('visualization', '1', {
-            packages: ['corechart']
-        });
-    </script>
-    <script type="text/javascript">
-        function drawVisualization() {
-            var data = google.visualization.arrayToDataTable([
-                ['Mon', .023, .025, .027, .031],
-                ['Tue', .02, .027, .027, .03],
-                ['Wed', .019, .022, .025, .029],
-                ['Thu', .021, .025, .027, .033],
-                ['Fri', .02, .027, .022, .028] // Treat first row as data as well.        
-            ], true);
-            var options = {
-                legend: 'none'
-            };
-            var chart = new google.visualization.CandlestickChart(document.getElementById('chart_div'));
-            chart.draw(data, options);
-        }
-        google.setOnLoadCallback(drawVisualization);
-    </script>
-    <script type="text/javascript">
-        $.getJSON("http://localhost:5000/getordersjson/{{ pair }}/ask", function(data) {
-            var items = [];
-            $.each(data, function(id, order) {
-                items.push('<tr> <td>' + order.price + '</td> <td>' + order.amount + '</td></tr>');
-            });
-
-            $(items.join("")).appendTo("#asktable");
-        });
-
-        $.getJSON("http://localhost:5000/getordersjson/{{ pair }}/bid", function(data) {
-            var items = [];
-            $.each(data, function(id, order) {
-                items.push('<tr> <td>' + order.price + '</td> <td>' + order.amount + '</td></tr>');
-            });
-
-            $(items.join("")).appendTo("#bidtable");
-        });
-    </script>
-    <style type="text/css">
+{% block title %}This is an example page{% endblock %}
+{% block styles %}
+{{super()}}
+<style type="text/css">
         /* Space out content a bit */
         
         body {
@@ -136,9 +89,55 @@
             }
         }
     </style>
-</head>
+    {% endblock %}
 
-<body>
+{% block scripts %}
+
+    <script type="text/javascript" src="https://www.google.com/jsapi"></script>
+    <script type="text/javascript">
+        google.load('visualization', '1', {
+            packages: ['corechart']
+        });
+    </script>
+    <script type="text/javascript">
+        function drawVisualization() {
+            var data = google.visualization.arrayToDataTable([
+                ['Mon', .023, .025, .027, .031],
+                ['Tue', .02, .027, .027, .03],
+                ['Wed', .019, .022, .025, .029],
+                ['Thu', .021, .025, .027, .033],
+                ['Fri', .02, .027, .022, .028] // Treat first row as data as well.        
+            ], true);
+            var options = {
+                legend: 'none'
+            };
+            var chart = new google.visualization.CandlestickChart(document.getElementById('chart_div'));
+            chart.draw(data, options);
+        }
+        google.setOnLoadCallback(drawVisualization);
+    </script>
+    <script type="text/javascript">
+        $.getJSON("http://localhost:5000/getordersjson/{{ pair }}/ask", function(data) {
+            var items = [];
+            $.each(data, function(id, order) {
+                items.push('<tr> <td>' + order.price + '</td> <td>' + order.amount + '</td></tr>');
+            });
+
+            $(items.join("")).appendTo("#asktable");
+        });
+
+        $.getJSON("http://localhost:5000/getordersjson/{{ pair }}/bid", function(data) {
+            var items = [];
+            $.each(data, function(id, order) {
+                items.push('<tr> <td>' + order.price + '</td> <td>' + order.amount + '</td></tr>');
+            });
+
+            $(items.join("")).appendTo("#bidtable");
+        });
+    </script>
+    {% endblock %}
+  {% block content %}
+
     <div class="container">
         <div class="header">
             <ul class="nav nav-pills pull-right">
@@ -296,6 +295,4 @@
         </div>
     </div>
     <!-- /container -->
-</body>
-
-</html>
+    {% endblock %}
