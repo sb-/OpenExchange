@@ -1,4 +1,4 @@
-{% extends "bootstrap/base.html" %}
+{% extends "baselayout.html" %}
 {% block styles %}
 {{super()}}
     <style type="text/css">
@@ -50,12 +50,15 @@
 
       <form class="form" name="loginform" method="POST" action="register">
         <h2 class="form-signin-heading">Register</h2>
-        {% if error %}
-          <div class="alert alert-danger alert-info">
-          <button type="button" class="close" data-dismiss="alert">&times;</button>
-          <b>Error!</b>  {{ error }}
-        </div>
-        {% endif %}
+        {% with messages = get_flashed_messages(with_categories=true) %} 
+        {% if messages %}
+            {% for category, message in messages %}
+            <div class="alert alert-{{category}} alert-info">
+                <button type="button" class="close" data-dismiss="alert">&times;</button>
+                <b>Error!</b> {{ message }}
+            </div>
+            {% endfor %}
+        {% endif %} {% endwith %}
         <input type="text" class="form-control" placeholder="Name" name="username">
         <input type="text" class="form-control" placeholder="Email address" name="email">
         <input type="password" class="form-control" placeholder="Password" name="password">

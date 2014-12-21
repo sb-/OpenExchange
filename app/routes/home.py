@@ -4,7 +4,7 @@ Home/Basic Stuff
 =================
 """
 
-from flask import Blueprint, session, request, render_template
+from flask import Blueprint, session, request, render_template, flash
 
 from app.util import home_page
 from app.util import generate_password_hash, check_password_hash, generate_deposit_address, is_logged_in, account_page
@@ -12,12 +12,22 @@ from app.database import db_session, redis
 from app.models import *
 from app.config import config
 import time
+from wtforms import Form, BooleanField, TextField, PasswordField, validators
 
 home = Blueprint('home', __name__, url_prefix='/')
 
 
 """ Basic/Account stuff """
-
+class RegistrationForm(Form):
+    """Example form straight from Flask-WTF documentation. """
+    username = TextField('Name', [validators.Length(min=4, max=25)])
+    email = TextField('Email Address', [validators.Length(min=6, max=35)])
+    password = PasswordField('New Password', [
+        validators.Required(),
+        validators.EqualTo('confirm', message='Passwords must match')
+    ])
+    confirm = PasswordField('Repeat Password')
+    #accept_tos = BooleanField('I accept the TOS', [validators.Required()])
 
 @home.route('/')
 def homepage():
@@ -42,17 +52,14 @@ def login():
     if request.method == 'POST':
         user = User.query.filter(User.email == request.form['email']).first()
         if not user:
-            return render_template(
-                'login2.html',
-                error="Please check your email and username.")
+            flash('Please check your email and username.', 'danger')
+            return render_template('login2.html')
         elif not check_password_hash(user.password, request.form['password']):
-            return render_template(
-                'login2.html',
-                error="Please check your email and username.")
+            flash('Please check your email and username.', 'danger')
+            return render_template('login2.html')
         elif not user.activated:
-            return render_template(
-                'login2.html',
-                error="Please confirm your email before logging in.")
+            flash('Please confirm your email before logging in.', 'error')
+            return render_template('login2.html')
         else:
             session['logged_in'] = True
             session['userid'] = User.query.filter(
@@ -88,18 +95,16 @@ def register():
         db_session.add(u)
         db_session.commit()
 
-        for currency in config.get_currencies():
+        """for currency in config.get_currencies():
             addr = generate_deposit_address(currency)
             a = Address(currency, addr, u.id)
             db_session.add(a)
         db_session.commit()
         if not send_confirm_email(u.id):
-            return home_page(
-                "ltc_btc",
-                danger='An error occured during registration. Please contact the administrator.')
-        return home_page(
-            "ltc_btc",
-            dismissable='Successfully registered. Please check your email and confirm your account before logging in.')
+            flash('An error occured during registration. Please contact the administrator.', 'danger')
+            return home_page("ltc_btc")"""
+        flash('Successfully registered. Please check your email and confirm your account before logging in.', 'dismissable')
+        return home_page("ltc_btc")
 
     if request.method == 'GET':
         return render_template("register.html")
@@ -149,5 +154,6 @@ def send_confirm_email(uid):
 @home.route('trade/<instrument>')
 def trade_page(instrument):
     if not config.is_valid_instrument(instrument):
-        return home_page("ltc_btc", danger="Invalid trade pair!")
+        flash('Invalid trade pair!', 'danger')
+        return home_page("ltc_btc")
     return home_page(instrument)

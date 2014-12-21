@@ -1,6 +1,5 @@
-{% extends "bootstrap/base.html" %}
+{% extends "baselayout.html" %}
 
-{% block title %}This is an example page{% endblock %}
 {% block styles %}
 {{super()}}
 <style type="text/css">
@@ -204,22 +203,15 @@
                 </div>
             </div>
         </div>
-        {% if dismissable %}
-        <div class="alert alert-dismissable alert-info">
-            <button type="button" class="close" data-dismiss="alert">&times;</button>
-            {{ dismissable }}
-        </div>
-        {% endif %} {% if success %}
-        <div class="alert alert-success alert-info">
-            <button type="button" class="close" data-dismiss="alert">&times;</button>
-            <b>Success!</b> {{ success }}
-        </div>
-        {% endif %} {% if danger %}
-        <div class="alert alert-danger alert-info">
-            <button type="button" class="close" data-dismiss="alert">&times;</button>
-            <b>Error!</b> {{ danger }}
-        </div>
-        {% endif %}
+        {% with messages = get_flashed_messages(with_categories=true) %} 
+        {% if messages %}
+            {% for category, message in messages %}
+            <div class="alert alert-{{category}} alert-info">
+                <button type="button" class="close" data-dismiss="alert">&times;</button>
+                <b>Error!</b> {{ message }}
+            </div>
+            {% endfor %}
+        {% endif %} {% endwith %}
         <div class="row marketing">
             <div class="col-lg-6">
                 <h4>Buy {{ pair[0:pair.find("_")].upper() }}</h4>
