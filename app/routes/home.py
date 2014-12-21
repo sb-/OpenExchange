@@ -75,17 +75,14 @@ def register():
         if "" in request.form.values():
             return render_template("register.html")
         if request.form['username'] in list(User.query.values(User.name)):
-            return render_template(
-                "register.html",
-                error="Please enter a password.")
+            flash('Please enter a password.', 'error')
+            return render_template("register.html")
         if request.form['email'] in list(User.query.values(User.email)):
-            return render_template(
-                "register.html",
-                error="Please enter a valid email.")
+            flash('Please enter a valid email.', 'error')
+            return render_template("register.html")
         if request.form['password'] != request.form['passwordconfirm']:
-            return render_template(
-                "register.html",
-                error="Passwords do not match.")
+            flash('Passwords do not match.', 'error')
+            return render_template("register.html")
         # TODO: error for when they try to register when logged in already
         u = User(
             request.form['username'],
@@ -123,14 +120,16 @@ def activate_account(code):
     user.activated = True
     redis.hdel('activation_keys', code)
     db_session.commit()
-    return home_page("ltc_btc", dismissable='Account successfully registered!')
+    flash("Account successfully registered!", "dismissable")
+    return home_page("ltc_btc")
 
 
 @home.route('logout')
 def logout():
     session.pop('logged_in', None)
     session.pop('userid', None)
-    return home_page("ltc_btc", dismissable="Successfully logged out!")
+    flash("Successfully logged out!", "dismissable")
+    return home_page("ltc_btc")
 
 
 def send_confirm_email(uid):

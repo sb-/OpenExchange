@@ -21,4 +21,4 @@ to get up and running for a Flask app if you have not done this before.
 #### SQL layout https://github.com/sb-/OpenExchange/wiki/SQL-Structure
 
 ---
-Contact the original author at sambarani@hotmail.com
+Contact the original author at sambarani@utexas.edu
