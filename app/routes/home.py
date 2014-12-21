@@ -70,7 +70,8 @@ def login():
             session['userid'] = User.query.filter(
                 User.email == request.form['email']).first().id
             session['expire'] = time.time() + 3600
-            return home_page("ltc_btc", success="Logged in!")
+            flash("Logged in!","dismissable")
+            return home_page("ltc_btc")
     return render_template('login2.html')
 
 

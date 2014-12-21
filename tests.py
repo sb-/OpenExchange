@@ -23,11 +23,14 @@ class ExchangeTestCase(unittest.TestCase):
         password=password
         ), follow_redirects=True)
 
+    #def register(self, name, email, password, confirm_password):
+    #    return self.app.post('/register', data = dict(name=name,email=email,password=password,confirm_password=confirm_password), follow_redirects=True)
+
     def logout(self):
         return self.app.get('/logout', follow_redirects=True)
 
     def test_login_logout(self):
-        rv = self.login('sam@b.net', 'shit')
+        rv = self.login('testbtc@mailinator.com', 'shit')
         assert 'Logged in!' in rv.data
         rv = self.logout()
         assert 'Successfully logged out!' in rv.data
@@ -35,6 +38,16 @@ class ExchangeTestCase(unittest.TestCase):
         assert 'Please check your email and username.' in rv.data
         rv = self.login('admin', 'defaultx')
         assert 'Please check your email and username.' in rv.data
+
+    """def test_register(self):
+        rv = self.login('testbtc@mailinator.com', 'shit')
+        assert 'Logged in!' in rv.data
+        rv = self.logout()
+        assert 'Successfully logged out!' in rv.data
+        rv = self.login('adminx', 'default')
+        assert 'Please check your email and username.' in rv.data
+        rv = self.login('admin', 'defaultx')
+        assert 'Please check your email and username.' in rv.data"""
 
 
 def logout(self):

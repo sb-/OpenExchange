@@ -26,7 +26,7 @@ class ExchangeTestCase(unittest.TestCase):
         return self.app.get('/logout', follow_redirects=True)
 
     def test_login_logout(self):
-        rv = self.login('sam@b.net', 'shit')
+        rv = self.login('testbtc@mailinator.com', 'shit')
         assert 'Logged in!' in rv.data
         rv = self.logout()
         assert 'Successfully logged out!' in rv.data

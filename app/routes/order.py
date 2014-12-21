@@ -5,9 +5,11 @@ Order functions
 """
 
 
-from flask import Blueprint, request, flash
+from flask import Blueprint, request, flash, session
 from app.util import home_page, is_logged_in
 from app.database import redis
+from app.config import config
+
 order = Blueprint('order', __name__, url_prefix='/order')
 
 

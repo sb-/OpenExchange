@@ -215,7 +215,7 @@
         <div class="row marketing">
             <div class="col-lg-6">
                 <h4>Buy {{ pair[0:pair.find("_")].upper() }}</h4>
-                <form method="POST" action="/addorder">
+                <form method="POST" action="/order/add">
                     <input type="hidden" name="ordertype" value="buy">
                     <input type="hidden" name="currency_pair" value="ltc_btc">
                     <span class="help-block">Amount</span>
@@ -228,7 +228,7 @@
             </div>
             <div class="col-lg-6">
                 <h4>Sell {{ pair[0:pair.find("_")].upper() }}</h4>
-                <form method="POST" action="/addorder">
+                <form method="POST" action="/order/add">
                     <input type="hidden" name="ordertype" value="sell">
                     <input type="hidden" name="currency_pair" value="ltc_btc">
                     <span class="help-block">Amount</span>
