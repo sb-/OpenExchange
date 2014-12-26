@@ -7,7 +7,8 @@ API/JSON functions
 import json
 
 from flask import Blueprint, Response
-
+from app.config import config
+from app.database import redis
 
 api = Blueprint('api', __name__, url_prefix='/api')
 

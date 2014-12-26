@@ -93,6 +93,7 @@
 {% block scripts %}
 
     <script type="text/javascript" src="https://www.google.com/jsapi"></script>
+    <script src="//ajax.googleapis.com/ajax/libs/jquery/1.11.1/jquery.min.js" ></script>
     <script type="text/javascript">
         google.load('visualization', '1', {
             packages: ['corechart']
@@ -116,7 +117,8 @@
         google.setOnLoadCallback(drawVisualization);
     </script>
     <script type="text/javascript">
-        $.getJSON("http://localhost:5000/getordersjson/{{ pair }}/ask", function(data) {
+
+        $.getJSON("/api/orders/{{ pair }}/ask", function(data) {
             var items = [];
             $.each(data, function(id, order) {
                 items.push('<tr> <td>' + order.price + '</td> <td>' + order.amount + '</td></tr>');
@@ -125,7 +127,7 @@
             $(items.join("")).appendTo("#asktable");
         });
 
-        $.getJSON("http://localhost:5000/getordersjson/{{ pair }}/bid", function(data) {
+        $.getJSON("/api/orders/{{ pair }}/bid", function(data) {
             var items = [];
             $.each(data, function(id, order) {
                 items.push('<tr> <td>' + order.price + '</td> <td>' + order.amount + '</td></tr>');
