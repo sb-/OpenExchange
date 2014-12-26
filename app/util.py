@@ -1,16 +1,18 @@
 from flask import Blueprint, Response, session, render_template
-from app.database import init_db, db_session, redis
-from app.config import config
+from database import init_db, db_session, redis
+from config import config
 import hashlib
-from jsonrpc import ServiceProxy
-from app.models import *
+from models import *
 import time
 from cPickle import loads, dumps
+import sys, os.path
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), os.path.pardir)))
+#Above two lines needed to get jsonrpc from parent dir
+from jsonrpc import ServiceProxy
 
 
 def check_password_hash(h, pw):
     return hashlib.sha224(pw).hexdigest() == h
-
 
 def generate_password_hash(pw):
     return hashlib.sha224(pw).hexdigest()
