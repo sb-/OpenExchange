@@ -40,14 +40,11 @@ class ExchangeTestCase(unittest.TestCase):
         assert 'Please check your email and username.' in rv.data
 
     """def test_register(self):
-        rv = self.login('testbtc@mailinator.com', 'shit')
-        assert 'Logged in!' in rv.data
-        rv = self.logout()
-        assert 'Successfully logged out!' in rv.data
-        rv = self.login('adminx', 'default')
-        assert 'Please check your email and username.' in rv.data
-        rv = self.login('admin', 'defaultx')
-        assert 'Please check your email and username.' in rv.data"""
+        rv = self.register('new acc', newacc123@mailinator.com', 'testpass', 'testpass')
+        assert 'Successfully registered' in rv.data
+        rv = self.login()
+        assert 'Please confirm' in rv.data
+        """
 
 
 def logout(self):
