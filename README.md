@@ -1,8 +1,8 @@
 #OpenExchange
-OpenExchange is an open source cryptocurrency exchange built with Python, Flask, and Redis. It was built with the goal of having an easy to set up and extend exchange software available to all. 
+OpenExchange is an open source cryptocurrency exchange built with Python, Flask, and Redis. It was built the objective of providing an exchange software that is easy to set up, extend, and readily available to all. 
 
 ### Status
-OpenExchange has all the working core functionality. Deposits, withdrawals, exchange all work, and it is trivial to add new trade pairs and currencies to the software. 
+OpenExchange has all working core functionalities, which include deposits, withdrawals, and exchanges. It is trivial to add new trade pairs and currencies to the software. 
 
 ### Getting Started
 OpenExchange depends on having the JSONRPC, daemon, and redis modules. 
